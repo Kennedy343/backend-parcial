@@ -13,6 +13,12 @@ async function bootstrap() {
     }),
   );
 
+    app.enableCors({
+    origin: 'http://localhost:5173', // URL de tu frontend
+    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
+    credentials: true, // si usas cookies o JWT en cookies
+  });
+
   await app.listen(3000);
 }
 bootstrap();

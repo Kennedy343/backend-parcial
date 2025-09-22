@@ -38,4 +38,12 @@ export class TasksService {
     const task = await this.findOne(id);
     await this.tasksRepo.remove(task);
   }
+
+async toggleDone(id: number): Promise<Task> {
+    const task = await this.findOne(id);
+    task.done = !task.done;
+    return this.tasksRepo.save(task);
+  }
+
+
 }

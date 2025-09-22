@@ -30,6 +30,11 @@ export class TasksController {
     return this.tasksService.update(+id, dto);
   }
 
+   @Patch(':id/toggle')
+  async toggleTaskDone(@Param('id') id: string) {
+    return this.tasksService.toggleDone(Number(id));
+  }
+
   @Delete(':id')
   remove(@Param('id') id: string) {
     return this.tasksService.remove(+id);

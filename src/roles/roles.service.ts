@@ -1,59 +1,65 @@
-// src/roles/roles.service.ts
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  ConflictException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Role } from './entities/role.entity';
-import { UserRole } from './entities/user-role.entity';
-import { User } from '../users/entities/user.entity';
+import { CreateRoleDto } from './dto/create-role.dto';
+import { UpdateRoleDto } from './dto/update-role.dto';
 
 @Injectable()
 export class RolesService {
   constructor(
-    @InjectRepository(Role) private rolesRepo: Repository<Role>,
-    @InjectRepository(UserRole) private userRolesRepo: Repository<UserRole>,
-    @InjectRepository(User) private usersRepo: Repository<User>,
+    @InjectRepository(Role)
+    private readonly rolesRepo: Repository<Role>,
   ) {}
 
-  // CRUD de roles
-  createRole(data: Partial<Role>) {
-    const role = this.rolesRepo.create(data);
-    return this.rolesRepo.save(role);
+  async create(dto: CreateRoleDto): Promise<Role> {
+    try {
+      return await this.rolesRepo.save(this.rolesRepo.create(dto));
+    } catch (error) {
+      this.assertUniqueName(error);
+      throw error;
+    }
   }
 
-  findAllRoles() {
+  findAll(): Promise<Role[]> {
     return this.rolesRepo.find();
   }
 
-  findOneRole(id: number) {
-    return this.rolesRepo.findOne({ where: { id } });
+  async findOne(id: number): Promise<Role> {
+    const role = await this.rolesRepo.findOne({ where: { id } });
+    if (!role) {
+      throw new NotFoundException('Rol no encontrado');
+    }
+    return role;
   }
 
-  async updateRole(id: number, data: Partial<Role>) {
-    await this.rolesRepo.update(id, data);
-    return this.findOneRole(id);
+  async update(id: number, dto: UpdateRoleDto): Promise<Role> {
+    const role = await this.findOne(id);
+    try {
+      Object.assign(role, dto);
+      return await this.rolesRepo.save(role);
+    } catch (error) {
+      this.assertUniqueName(error);
+      throw error;
+    }
   }
 
-  removeRole(id: number) {
-    return this.rolesRepo.delete(id);
+  async remove(id: number): Promise<void> {
+    await this.findOne(id);
+    await this.rolesRepo.delete(id);
   }
 
-  // Asignar rol a usuario
-  async assignRoleToUser(userId: number, roleId: number) {
-    const user = await this.usersRepo.findOne({ where: { id: userId } });
-    if (!user) throw new NotFoundException('Usuario no encontrado');
-
-    const role = await this.rolesRepo.findOne({ where: { id: roleId } });
-    if (!role) throw new NotFoundException('Rol no encontrado');
-
-    const userRole = this.userRolesRepo.create({ user, role });
-    return this.userRolesRepo.save(userRole);
-  }
-
-  // Obtener roles de un usuario
-  getUserRoles(userId: number) {
-    return this.userRolesRepo.find({
-      where: { user: { id: userId } },
-      relations: ['role'],
-    });
+  private assertUniqueName(error: unknown): void {
+    if (
+      typeof error === 'object' &&
+      error !== null &&
+      (error as { code?: string }).code === '23505'
+    ) {
+      throw new ConflictException('Ya existe un rol con ese nombre');
+    }
   }
 }

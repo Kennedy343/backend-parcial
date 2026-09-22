@@ -1,33 +1,43 @@
-// src/roles/roles.controller.ts
-import { Controller, Get, Post, Param, Body, Delete } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  ParseIntPipe,
+  Patch,
+  Post,
+} from '@nestjs/common';
 import { RolesService } from './roles.service';
 import { CreateRoleDto } from './dto/create-role.dto';
+import { UpdateRoleDto } from './dto/update-role.dto';
 
 @Controller('roles')
 export class RolesController {
   constructor(private readonly rolesService: RolesService) {}
 
-  // Crear rol con validación
   @Post()
   create(@Body() dto: CreateRoleDto) {
-    return this.rolesService.createRole(dto);
+    return this.rolesService.create(dto);
   }
 
-  // Obtener todos los roles
   @Get()
   findAll() {
-    return this.rolesService.findAllRoles();
+    return this.rolesService.findAll();
   }
 
-  // Obtener rol por ID
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.rolesService.findOneRole(+id);
+  findOne(@Param('id', ParseIntPipe) id: number) {
+    return this.rolesService.findOne(id);
   }
 
-  // Eliminar rol
+  @Patch(':id')
+  update(@Param('id', ParseIntPipe) id: number, @Body() dto: UpdateRoleDto) {
+    return this.rolesService.update(id, dto);
+  }
+
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.rolesService.removeRole(+id);
+  remove(@Param('id', ParseIntPipe) id: number) {
+    return this.rolesService.remove(id);
   }
 }

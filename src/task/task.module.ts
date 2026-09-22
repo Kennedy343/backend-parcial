@@ -1,4 +1,3 @@
-// src/tasks/tasks.module.ts
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { TasksService } from './task.service';
